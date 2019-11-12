@@ -26,6 +26,8 @@ public:
 	cv::Mat canny(const cv::Mat& img, int low_threshold, int high_threshold, bool L2gradient);
 	cv::Mat RGB2GRAY_16(const cv::Mat & img, int channel);
 
+	std::vector<cv::Mat> get_structures() { return structures; }
+
 private:
 	std::vector<cv::Mat> structures;
 	bool is_inf_sup_first = true;
