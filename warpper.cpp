@@ -135,9 +135,9 @@ uchar Warpper::getInterpolatedGray_FromDepth(int u, int v, int interpolation_mod
 	return (unsigned char)(result);
 }
 
-void Warpper::setHomography(const cv::Mat& color, const cv::Mat& depth, int downscale) {
+void Warpper::setHomography(const cv::Mat& color, const cv::Mat& point_cloud, int downscale) {
 	color_ = color;
-	depth_ = depth;
+	point_cloud_ = point_cloud;
 	downscale_ = downscale;
 	
 	calcCorrespondenDepthToColor();
@@ -147,28 +147,26 @@ void Warpper::setHomography(const cv::Mat& color, const cv::Mat& depth, int down
 void Warpper::calcCorrespondenDepthToColor() {
 	int color_width = color_.cols;
 	int color_height = color_.rows;
-	int depth_width = depth_.cols;
-	int depth_height = depth_.rows;
+	int pc_width = point_cloud_.cols;
+	int pc_height= point_cloud_.rows;
 
-	d2c_correspondence = std::vector<std::vector<std::pair<float, float>>>(depth_height, std::vector<std::pair<float, float>>(depth_width, std::make_pair(-1, -1)));
+	d2c_correspondence = std::vector<std::vector<std::pair<float, float>>>(pc_height, std::vector<std::pair<float, float>>(pc_width, std::make_pair(-1, -1)));
+
+	float* pc_data = (float*)point_cloud_.data;
 
 #pragma omp parallel for
-	for (int v = 0; v < depth_height; v++) {
-		for (int u = 0; u < depth_width; u++) {
-			float Z = depth_.at<unsigned short>(v, u);
-			float x, y, z;
-			z = Z;
-			x = (u - (depth_intrinsic_.ppx / downscale_)) * z / (depth_intrinsic_.fx / downscale_);
-			y = (v - (depth_intrinsic_.ppy / downscale_)) * z / (depth_intrinsic_.fy / downscale_);
-			if (x == 0.0 && y == 0.0 && z == 0.0)
-				continue;
+	for (int r = 0; r < pc_height; r++) {
+		for (int c = 0; c < pc_width; c++) {
+			float x = pc_data[(r * pc_width + c) * 3 + 0];
+			float y = pc_data[(r * pc_width + c) * 3 + 1];
+			float z = pc_data[(r * pc_width + c) * 3 + 2];
 
 			glm::fvec4 xyz_in_ccs = d2c_extrinsic_ * glm::fvec4(x, y, z, 1);
 			float u_in_ccs = (xyz_in_ccs.x / xyz_in_ccs.z) * (color_intrinsic_.fx / downscale_) + (color_intrinsic_.ppx / downscale_);
 			float v_in_ccs = (xyz_in_ccs.y / xyz_in_ccs.z) * (color_intrinsic_.fy / downscale_) + (color_intrinsic_.ppy / downscale_);
 
 			if (u_in_ccs >= 0 && u_in_ccs < color_width && v_in_ccs >= 0 && v_in_ccs < color_height)
-				d2c_correspondence.at(v).at(u) = std::make_pair(v_in_ccs, u_in_ccs);
+				d2c_correspondence.at(r).at(c) = std::make_pair(v_in_ccs, u_in_ccs);
 		}
 	}
 }
@@ -176,12 +174,12 @@ void Warpper::calcCorrespondenDepthToColor() {
 void Warpper::calcHomography() {
 	int color_width = color_.cols;
 	int color_height = color_.rows;
-	int depth_width = depth_.cols;
-	int depth_height = depth_.rows;
+	int pc_width = point_cloud_.cols;
+	int pc_height = point_cloud_.rows;
 
 	std::vector<cv::Point2f> color_2d, depth_2d;
-	for (int r = 0; r < depth_height; r+= (depth_height / 10)) {
-		for (int c = 0; c < depth_width; c += (depth_width / 10)) {
+	for (int r = 0; r < pc_height; r+= (pc_height / 10)) {
+		for (int c = 0; c < pc_width; c += (pc_width / 10)) {
 			if (d2c_correspondence.at(r).at(c).first != -1 && d2c_correspondence.at(r).at(c).second != -1) {
 				depth_2d.emplace_back(cv::Point2f(c, r)); // x, y
 				color_2d.emplace_back(cv::Point2f(d2c_correspondence.at(r).at(c).second, d2c_correspondence.at(r).at(c).first)); // x, y

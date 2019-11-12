@@ -14,7 +14,7 @@ public:
 	~Warpper();
 
 public:
-	void setHomography(const cv::Mat & color, const cv::Mat & depth, int downscale);
+	void setHomography(const cv::Mat & color, const cv::Mat & point_cloud, int downscale);
 	
 	cv::Mat warpRGB_ColorToDepth(const cv::Mat& input, cv::Mat& output, int interpolation_mode);
 	cv::Mat warpGray_DepthToColor(const cv::Mat & input, cv::Mat & output);
@@ -34,7 +34,7 @@ private:
 	glm::fmat3x3 H_c2d_;
 
 	cv::Mat color_;
-	cv::Mat depth_;
+	cv::Mat point_cloud_;
 	cv::Mat input_;
 
 	ms::Intrinsic_ color_intrinsic_;

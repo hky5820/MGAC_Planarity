@@ -127,10 +127,11 @@ int main() {
 	ms::Segmentor segmentor(color_int, depth_int, extrinsic);
 
 	ms::DepthEdgeParam de_param(1.2, 2);
-	ms::MorphSnakeParam ms_param(3, ms::CHANNEL::RED, 50, 2, 1);
+	ms::MorphSnakeParam ms_param(2000, 3, ms::CHANNEL::RED, 50, 0.15, 1, 1);
 	ms::CannyParam cn_param(700, 1500, true);
 	ms::InitLevelSetParam ls_param(240, 320, 10);
-	ms::VisualizationParam vs_param(false, false, false);
+	ms::VisualizationParam vs_param(false, false, false, false, false);
+	ms::EdgeSelectionParam es_param(true, true);
 	bool streaming_segmentation_on = false;
 	bool is_image_saved = false;
 	bool load_img_segmnetation_on = false;
@@ -161,18 +162,17 @@ int main() {
 			cv::destroyAllWindows();
 		}
 		if (load_img_segmnetation_on) {
-			cv::Mat mask = segmentor.doSegmentation(saved_img, saved_depth, de_param, cn_param, ms_param, ls_param, 2, ms::MASK_AT::COLOR, vs_param);
+			cv::Mat mask = segmentor.doSegmentation(saved_img, saved_depth, de_param, cn_param, ms_param, ls_param, 2, ms::MASK_AT::COLOR, vs_param, es_param);
 			cv::Mat ol = overlay(saved_img, 0.4, mask, 0.6);
 			cv::imshow("ol", ol);
 		}
-			
 		
 		if (key == 's' /* Streaming Image Segmentation */) {
 			streaming_segmentation_on = !streaming_segmentation_on;
 			cv::destroyAllWindows();
 		}
 		if (streaming_segmentation_on) {
-			cv::Mat mask = segmentor.doSegmentation(color_mat, depth_mat, de_param, cn_param, ms_param, ls_param, 2, ms::MASK_AT::COLOR, vs_param);
+			cv::Mat mask = segmentor.doSegmentation(color_mat, depth_mat, de_param, cn_param, ms_param, ls_param, 2, ms::MASK_AT::COLOR, vs_param, es_param);
 			cv::Mat ol = overlay(color_mat, 0.4, mask, 0.6);
 			cv::imshow("ol", ol);
 		}
@@ -183,7 +183,7 @@ int main() {
 			cv::destroyAllWindows();
 		}
 		if (vs_param.warpping_on) {
-			cv::Mat mask = segmentor.doSegmentation(color_mat, depth_mat, de_param, cn_param, ms_param, ls_param, 2, ms::MASK_AT::COLOR, vs_param);
+			cv::Mat mask = segmentor.doSegmentation(color_mat, depth_mat, de_param, cn_param, ms_param, ls_param, 2, ms::MASK_AT::COLOR, vs_param, es_param);
 			cv::Mat ol = overlay(c_depth_mat, 0.4, mask, 0.6);
 			cv::imshow("ol", ol);
 		}
@@ -196,8 +196,25 @@ int main() {
 			vs_param.canny_edge_on = !vs_param.canny_edge_on;
 			cv::destroyWindow("Canny_Edge");
 		}
+		if (key == '3') {
+			vs_param.merge_edge_on = !vs_param.merge_edge_on;
+			cv::destroyWindow("Merged_Edge");
+		}
+		if (key == '4') {
+			vs_param.inv_edge_on = !vs_param.inv_edge_on;
+			cv::destroyWindow("Inv_Edge");
+		}
+
+
+		if (key == 'o') {
+			es_param.use_depth_edge = !es_param.use_depth_edge;
+		}
+		if (key == 'p') {
+			es_param.use_canny_edge= !es_param.use_canny_edge;
+		}
+
 		
-		
+		cv::imshow("depth", c_depth_mat);
 		cv::imshow("color", color_mat);
 		key = cv::waitKey(1);
 	}

@@ -3,13 +3,16 @@
 
 #include <opencv2/core.hpp>
 
+#include <common.h>
+
 class Filter {
 public:
 	Filter();
 	~Filter() {}
 
 public:
-	cv::Mat inverse_edge_map(const cv::Mat & d_edge, const cv::Mat & canny, double sigma, int k_size);
+	cv::Mat inverse_edge_map(const cv::Mat & d_edge, const cv::Mat & canny, double sigma, int k_size, const ms::EdgeSelectionParam& es_param);
+	cv::Mat inverse_edge_map(const cv::Mat & gray, double alpha, double sigma, int k_size);
 
 	cv::Mat make_init_ls(const std::pair<int, int>& img_shape, const std::pair<int, int>& circle_center, unsigned char radius);
 

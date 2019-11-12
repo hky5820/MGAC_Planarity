@@ -40,19 +40,25 @@ namespace ms {
 	struct MorphSnakeParam {
 		MorphSnakeParam() {};
 		MorphSnakeParam(
+			double alpha_,
 			double sigma_,
 			int channel_,
 			int iteration_,
+			double threshold_,
 			int smoothing_,
 			int ballon_) :
+			alpha(alpha_),
 			sigma(sigma_),
 			channel(channel_),
 			iteration(iteration_),
+			threshold(threshold_),
 			smoothing(smoothing_),
 			ballon(ballon_) {}
+		double alpha;
 		double sigma;  // Gaussian에 사용되는 sigma
 		int channel;   // RGB에서 Gray로 변경시, 사용될 채널 종류(first,second,third) 혹은 OpenCV cvtColor 함수 ( GRAY )
 		int iteration;
+		double threshold;
 		int smoothing; // smoothing 횟수
 		int ballon;    // 1 or -1 ( 팽창 or 축소 )
 	};
@@ -90,11 +96,24 @@ namespace ms {
 	};
 
 	struct VisualizationParam {
-		VisualizationParam(bool depth_edge_on_, bool canny_edge_on_, bool warpping_on_) :
-			depth_edge_on(depth_edge_on_), canny_edge_on(canny_edge_on_), warpping_on(warpping_on_) {}
+		VisualizationParam(bool depth_edge_on_, bool canny_edge_on_, bool merge_edge_on_, bool inv_edge_on_, bool warpping_on_) :
+			depth_edge_on(depth_edge_on_),
+			canny_edge_on(canny_edge_on_),
+			merge_edge_on(merge_edge_on_),
+			inv_edge_on(inv_edge_on_),
+			warpping_on(warpping_on_) {}
 		bool depth_edge_on;
 		bool canny_edge_on;
+		bool merge_edge_on;
+		bool inv_edge_on;
 		bool warpping_on;
+	};
+
+	struct EdgeSelectionParam {
+		EdgeSelectionParam(bool use_depth_edge_, bool use_canny_edge_) :
+			use_depth_edge(use_depth_edge_), use_canny_edge(use_canny_edge_) {}
+		bool use_depth_edge;
+		bool use_canny_edge;
 	};
 
 	struct Intrinsic_ {

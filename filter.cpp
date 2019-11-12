@@ -22,10 +22,48 @@ Filter::Filter() {
 }
 
 cv::Mat Filter::inverse_edge_map(
+	const cv::Mat & gray,
+	double alpha,
+	double sigma,
+	int k_size/*window size*/) {
+
+	int rows = gray.rows;
+	int cols = gray.cols;
+
+	cv::Mat g_img;
+	gray.convertTo(g_img, CV_64FC1, 1. / SHRT_MAX);
+	
+	cv::Mat blur_gray;
+	cv::GaussianBlur(g_img, blur_gray, cv::Size(k_size, k_size), sigma);
+
+	cv::Mat gx = cv::Mat::zeros(blur_gray.size(), CV_64FC1);
+	cv::Mat gy = cv::Mat::zeros(blur_gray.size(), CV_64FC1);
+	gradient(blur_gray, gx, gy);
+
+	cv::Mat output = cv::Mat::zeros(rows, cols, CV_64FC1);
+	double* output_data = (double*)output.data;
+	double* gx_data = (double*)gx.data;
+	double* gy_data = (double*)gy.data;
+
+#pragma omp parallel for
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			double gx_val = gx_data[r*cols + c];
+			double gy_val = gy_data[r*cols + c];
+
+			double val = sqrtl( gx_val * gx_val + gy_val * gy_val);
+			output_data[r*cols + c] = 1. / sqrtl(1. + alpha * val);
+		}
+	}
+	return output;
+}
+
+cv::Mat Filter::inverse_edge_map(
 	const cv::Mat & d_edge, 
 	const cv::Mat& canny,
 	double sigma, 
-	int k_size){
+	int k_size,
+	const ms::EdgeSelectionParam& es_param ){
 
 	int rows = d_edge.rows;
 	int cols = d_edge.cols;
@@ -42,7 +80,7 @@ cv::Mat Filter::inverse_edge_map(
 #pragma omp parallel for
 	for (int r = 0; r < rows; r++) {
 		for (int c = 0; c < cols; c++) {
-			if(canny_data[r * cols + c] || de_data[r * cols + c])
+			if(canny_data[r * cols + c]*es_param.use_depth_edge || de_data[r * cols + c]*es_param.use_canny_edge)
 				output_data[r * cols + c] = 0;
 			else 
 				output_data[r * cols + c] = 255;
@@ -310,7 +348,7 @@ cv::Mat Filter::canny(const cv::Mat & gray, int low_threshold, int high_threshol
 	// Get Canny From Gx, Gy
 	cv::Mat canny;
 	cv::Canny(gx, gy, canny, low_threshold, high_threshold, L2gradient);
-	cv::dilate(canny, canny, cv::Mat::ones(3, 3, CV_8UC1));
+	//cv::dilate(canny, canny, cv::Mat::ones(3, 3, CV_8UC1));
 
 	return canny;
 }

@@ -64,26 +64,46 @@ namespace cv_helper {
 		}
 		return ol;
 	}
+
+	cv::Mat ORimages(const cv::Mat& img1, const cv::Mat& img2) {
+		int rows = img1.rows;
+		int cols = img2.cols;
+		cv::Mat output = cv::Mat::zeros(img1.size(), CV_8UC1);
+
+		uchar* img1_data = (uchar*)img1.data;
+		uchar* img2_data = (uchar*)img2.data;
+		uchar* output_data = (uchar*)output.data;
+
+		for (int r = 0; r < rows; r++) {
+			for (int c = 0; c < cols; c++) {
+				if (img1_data[r*cols + c] || img2_data[r*cols + c]) {
+					output_data[r*cols + c] = 255;
+				}
+			}
+		}
+
+		return output;
+	}
 }
 
 namespace pc_helper {
 
 	// Point Cloud를 OpenCV 3Channel에 저장
-	void depthToPointcloud_Mat(const cv::Mat& depth_image, cv::Mat& pointcloud_xyz, float fx, float fy, float cx, float cy) {
+	void depthToPointcloud_Mat(const cv::Mat& depth_image, cv::Mat& pointcloud_xyz, float fx, float fy, float cx, float cy, int downscale) {
 		int rows = depth_image.rows;
 		int cols = depth_image.cols;
 		
 		unsigned short* d_img_data = (unsigned short*)depth_image.data;
 		float* pc_xyz_data = (float*)pointcloud_xyz.data;
 #pragma omp parallel for
-		for (int v = 0; v < depth_image.rows; ++v) {
-			for (int u = 0; u < depth_image.cols; ++u) {
+		for (int v = 0; v < rows; ++v) {
+			for (int u = 0; u < cols; ++u) {
 				float Z = d_img_data[v * cols + u];
 
 				float x, y, z;
 				z = Z;
-				x = (u - cx) * Z / fx;
-				y = (v - cy) * Z / fy;
+				x = (u - cx / downscale) * Z / ( fx / downscale);
+				y = (v - cy / downscale) * Z / ( fy / downscale);
 
 				if (x == 0.0 && y == 0.0 && z == 0.0)
 					continue;
