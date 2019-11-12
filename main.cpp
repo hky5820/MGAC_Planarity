@@ -12,6 +12,8 @@
 
 #include <segmentor.h>
 
+typedef std::chrono::high_resolution_clock::time_point c_time;
+
 cv::Mat	overlay(const cv::Mat &img1, float w1, const cv::Mat &img2, float w2) {
 	cv::Mat ol = cv::Mat::zeros(img1.size(), CV_8UC3);
 	uchar* ol_data = (uchar*)ol.data;
@@ -135,7 +137,8 @@ int main() {
 	bool streaming_segmentation_on = false;
 	bool is_image_saved = false;
 	bool load_img_segmnetation_on = false;
-
+	int size = 0;
+	float sum = 0;
 
 	while (key != 'q') {
 #pragma region GetRealSenseFrame
@@ -172,7 +175,15 @@ int main() {
 			cv::destroyAllWindows();
 		}
 		if (streaming_segmentation_on) {
+			c_time start = std::chrono::high_resolution_clock::now();
 			cv::Mat mask = segmentor.doSegmentation(color_mat, depth_mat, de_param, cn_param, ms_param, ls_param, 2, ms::MASK_AT::COLOR, vs_param, es_param);
+			c_time end = std::chrono::high_resolution_clock::now();
+			//cv::Mat mask = segmentor.doSegmentation(color, aligned_depth, de_param, cn_param, ms_param, ls_param, downscale, ms::MASK_AT::COLOR);
+			std::chrono::duration<double> time = end - start;
+			
+			std::cout << 1. / (time.count()) << "FPS";
+			std::cout << std::endl;
+
 			cv::Mat ol = overlay(color_mat, 0.4, mask, 0.6);
 			cv::imshow("ol", ol);
 		}

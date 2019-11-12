@@ -21,43 +21,35 @@ cv::Mat MorphSnake::morphological_geodesic_active_contour(
 	double* inv_edge_map_data = (double*)inv_edge_map.data;
 	uchar* me_data = (uchar*)merged_edge.data;
 
-	int rows = inv_edge_map.rows,
-		cols = inv_edge_map.cols;
-
+	int rows = inv_edge_map.rows;
+	int	cols = inv_edge_map.cols;
 
 	cv::Mat threshold_mask_balloon = cv::Mat::zeros(rows, cols, CV_8UC1);
 	uchar* tmb_data = (uchar*)threshold_mask_balloon.data;
-	int t_ballon = ballon < 0 ? -ballon : ballon;
-	//std::cout << (threshold / (double)t_ballon) << std::endl;
-
-	//std::cout << threshold << std::endl;
-	//std::cout << t_ballon << std::endl << std::endl;
+	int abs_ballon = ballon < 0 ? -ballon : ballon; // abs(ballon)
 	for (int r = 0; r < rows; r++) {
 		for (int c = 0; c < cols; c++) {
-			if (inv_edge_map_data[r * cols + c] > (threshold / (double)t_ballon))
+			if (inv_edge_map_data[r * cols + c] > (threshold / (double)abs_ballon))
 				tmb_data[r * cols + c] = 255;
 		}
 	}
 
-	cv::imshow("threshold_mask_balloon", threshold_mask_balloon);
-
-	cv::Mat gx = cv::Mat::zeros(rows, cols, CV_64FC1),
-		gy = cv::Mat::zeros(rows, cols, CV_64FC1);
+	cv::Mat gx = cv::Mat::zeros(rows, cols, CV_64FC1);
+	cv::Mat	gy = cv::Mat::zeros(rows, cols, CV_64FC1);
 	filter->gradient(inv_edge_map, gx, gy);
 	double* gx_data = (double*)gx.data;
 	double* gy_data = (double*)gy.data;
 
-	cv::Mat u = init_ls;
-	cv::Mat aux;
-
 	cv::Mat structure = cv::Mat::ones(3, 3, CV_8UC1);
-
-	cv::Mat dgx = cv::Mat::zeros(rows, cols, CV_8UC1),
-		dgy = cv::Mat::zeros(rows, cols, CV_8UC1);
-
+	cv::Mat dgx = cv::Mat::zeros(rows, cols, CV_8UC1);
+	cv::Mat	dgy = cv::Mat::zeros(rows, cols, CV_8UC1);
 	std::vector<cv::Mat> temps(4);
 	for (int i = 0; i < 4; i++)
 		temps[i] = cv::Mat::zeros(rows, cols, CV_8UC1);
+
+
+	cv::Mat u = init_ls;
+	cv::Mat aux;
 	for (int c_itr = 0; c_itr < iterations; c_itr++) {
 		if (ballon > 0)
 			cv::dilate(u, aux, structure);
@@ -86,12 +78,10 @@ cv::Mat MorphSnake::morphological_geodesic_active_contour(
 				double val =
 						gx_data[r*cols + c] * dgx_data[r*cols + c]
 						+ gy_data[r*cols + c] * dgy_data[r*cols + c];
-				if (val > 0) {
+				if (val > 0) 
 					u_data[r * cols + c] = 255;
-				}
-				else if (val < 0) {
+				else if (val < 0) 
 					u_data[r * cols + c] = 0;
-				}
 			}
 		}
 		for (int i = 0; i < smoothing; i++)
@@ -99,7 +89,6 @@ cv::Mat MorphSnake::morphological_geodesic_active_contour(
 	}
 	return u;
 }
-
 
 cv::Mat MorphSnake::morphological_geodesic_active_contour(
 	const cv::Mat & inv_edge_map,
