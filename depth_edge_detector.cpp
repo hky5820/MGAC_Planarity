@@ -11,11 +11,9 @@ cv::Mat DepthEdgeDetector::findEdge(const cv::Mat& pc_image, cv::Mat& edge_map,f
 	int d_width = pc_image.cols;
 	float* pc_image_data = (float*)pc_image.data;
 
-	memset(edge_map.data, 0, d_height*d_width * sizeof(uchar));
 	uchar* edge_map_data = (uchar*)edge_map.data;
 	
 	int edge_val_max = 255;
-
 #pragma omp parallel for
 	for (int r = 1 * radius; r < d_height - 1 * radius; r++) { // Boundary Condition 을 위해 radius 만큼 떨어진 곳들만 search
 		for (int c = 1 * radius; c < d_width - 1 * radius; c++) {

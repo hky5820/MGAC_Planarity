@@ -43,7 +43,10 @@ Segmentor::~Segmentor() {
 cv::Mat Segmentor::doSegmentation(
 	const cv::Mat& color, 
 	const cv::Mat& depth, 
-	const DepthEdgeParam & de_param, const CannyParam & cn_param, const MorphSnakeParam & ms_param, const InitLevelSetParam& ls_param,
+	const DepthEdgeParam & de_param, 
+	const CannyParam & cn_param, 
+	const MorphSnakeParam & ms_param, 
+	const InitLevelSetParam& ls_param,
 	int downscale, 
 	int mask_in_depth_or_color,
 	const VisualizationParam& vs_param,

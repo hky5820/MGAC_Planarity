@@ -3,7 +3,6 @@
 #include <iostream>
 
 #include <opencv2/imgproc.hpp>
-#include <opencv2/highgui.hpp>
 
 Filter::Filter() {
 	structures.resize(4);
@@ -76,7 +75,6 @@ cv::Mat Filter::inverse_edge_map(
 	uchar* output_data = (uchar*)output.data;
 	uchar* de_data = (uchar*)de_blur.data;
 	uchar* canny_data = (uchar*)canny.data;
-
 #pragma omp parallel for
 	for (int r = 0; r < rows; r++) {
 		for (int c = 0; c < cols; c++) {
